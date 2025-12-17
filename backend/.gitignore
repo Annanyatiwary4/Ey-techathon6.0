@@ -1,0 +1,41 @@
+# Python cache & build
+__pycache__/
+*.py[cod]
+*.pyo
+*.so
+*.egg-info/
+build/
+dist/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+.env
+.env/
+.env.*
+
+# Editor settings
+.vscode/
+.idea/
+*.swp
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Local config & secrets
+.env.local
+*.key
+*.pem
+
+# Logs & reports
+*.log
+logs/
+coverage/
+pytest_cache/
+
+# Tooling
+.alembic/
+.mypy_cache/
+.cache/

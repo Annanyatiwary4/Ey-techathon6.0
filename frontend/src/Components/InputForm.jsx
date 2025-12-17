@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { useResultStore } from '@/states/useResultStore'
@@ -9,32 +9,55 @@ const regions = ['Global', 'US', 'EU', 'APAC']
 const sources = ['PubMed', 'ClinicalTrials', 'Patents', 'All Sources']
 
 export default function InputForm() {
-  const setQuery = useResultStore((s) => s.setQuery)
+  const runAnalysis = useResultStore((s) => s.runAnalysis)
   const setMode = useResultStore((s) => s.setMode)
   const mode = useResultStore((s) => s.mode)
-  
-  const [drug, setDrug] = useState('')
-  const [disease, setDisease] = useState('')
+  const loading = useResultStore((s) => s.loading)
+  const query = useResultStore((s) => s.query)
 
-  const handleSearch = () => {
-    if (!drug && !disease && mode !== 4) {
-      toast.error('Please enter at least a drug or disease')
+  const [drug, setDrug] = useState(query?.drug || '')
+  const [disease, setDisease] = useState(query?.disease || '')
+
+  useEffect(() => {
+    setDrug(query?.drug || '')
+    setDisease(query?.disease || '')
+  }, [query?.drug, query?.disease])
+
+  const supportedModes = new Set([1, 3])
+
+  const handleSearch = async () => {
+    if (!supportedModes.has(mode)) {
+      toast.info('This case mode will be available soon. Please switch to Case 1 or Case 3 for live analysis.')
       return
     }
-    
-    setQuery(drug || null, disease || null)
-    toast.success('Analysis started!')
+
+    if (!drug.trim()) {
+      toast.error('Please enter a drug or molecule name')
+      return
+    }
+
+    try {
+      await runAnalysis({ drug, disease })
+      toast.success('Live analysis complete!')
+    } catch (error) {
+      toast.error(error.message || 'Failed to run analysis')
+    }
   }
 
   const caseOptions = [
-    { id: 1, label: 'Molecule → Diseases', desc: 'Find new disease applications' },
-    { id: 2, label: 'Disease → Molecules', desc: 'Find best drug candidates' },
-    { id: 3, label: 'Full Analysis', desc: 'Complete repurposing analysis' },
-    { id: 4, label: 'Trends & Intelligence', desc: 'Market and research trends' }
+    { id: 1, label: 'Molecule → Diseases', desc: 'Find new disease applications', live: true },
+    { id: 2, label: 'Disease → Molecules', desc: 'Coming soon — offline preview only', live: false },
+    { id: 3, label: 'Full Analysis', desc: 'Complete repurposing analysis (requires molecule)', live: true },
+    { id: 4, label: 'Trends & Intelligence', desc: 'Coming soon — market & research trends', live: false }
   ]
 
   return (
-    <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); handleSearch() }}>
+    <form
+      className="space-y-6"
+      onSubmit={async (e) => {
+        e.preventDefault()
+        await handleSearch()
+      }}>
       {/* Case Selection */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-3">Analysis Mode</label>
@@ -50,6 +73,9 @@ export default function InputForm() {
                   : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300'
               }`}>
               <div className="text-sm font-medium">{c.label}</div>
+              {!c.live && (
+                <div className="text-[11px] font-semibold text-amber-600 mt-1">Live data soon</div>
+              )}
             </button>
           ))}
         </div>
@@ -115,8 +141,12 @@ export default function InputForm() {
 
       {/* Submit Button */}
       <div>
-        <Button type="submit" className="w-full py-6 text-lg font-semibold">
-          Run Analysis
+        <Button
+          type="submit"
+          className="w-full py-6 text-lg font-semibold"
+          disabled={loading}
+          aria-busy={loading}>
+          {loading ? 'Running analysis…' : 'Run Analysis'}
         </Button>
       </div>
     </form>

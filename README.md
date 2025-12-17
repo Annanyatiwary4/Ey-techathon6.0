@@ -1,184 +1,114 @@
 # 🧬 PharmAI Insights — Drug & Disease Intelligence Platform
 
-## Overview
-PharmAI Insights is an **AI-driven drug repurposing and trend intelligence platform**. It allows researchers, clinicians, and analysts to:
-
-- Discover new disease indications for existing drugs  
-- Identify best candidate molecules for a given disease  
-- Perform full repurposability analysis for drug-disease pairs  
-- Analyze global trends and insights in drug research  
-
-The platform leverages **multi-agent orchestration**, **semantic vector search**, and **hybrid database strategies** for fast, updated, and accurate recommendations.
+This repository hosts a FastAPI + LangGraph backend and a React + Vite frontend. Case 1 (molecule → diseases) and Case 3 (full drug/disease analysis) are wired end-to-end; remaining modes fall back to UI messaging until their agent workflows are ready.
 
 ---
 
-## Features
+## Requirements
 
-### Case Modes
-1. **Case 1 — Molecule → Discover Diseases**
-   - Input: Drug only  
-   - Output: Ranked diseases with supporting evidence and sources  
-
-2. **Case 2 — Disease → Discover Molecules**
-   - Input: Disease only  
-   - Output: Ranked candidate drugs with clinical, patent, and market info  
-
-3. **Case 3 — Molecule + Disease → Full Analysis**
-   - Input: Drug + Disease  
-   - Output: Repurposeability score, Go/No-Go recommendation, detailed report  
-
-4. **Case 4 — Trend & Intelligence**
-   - Input: Optional  
-   - Output: Trend dashboards, heatmaps, co-mention analysis, emerging research  
-
-### Additional Features
-- PDF export of reports  
-- Source URL tracking for every evidence item  
-- Real-time update using hybrid Vector + Structured DB  
-- Self-growing knowledge base with incremental API ingestion  
+- Python 3.11+ (project tested with 3.12)
+- Node.js 20+
+- pnpm/npm/yarn (examples below use npm)
+- GROQ API key for the LLM-powered LangGraph agents
 
 ---
 
-## Tech Stack
+## Environment Variables
 
-### Frontend
-- React 18 + TypeScript  
-- React Router v6  
-- Zustand / Context API (state management)  
-- TailwindCSS + ShadCN UI (UI components)  
-- Recharts / Chart.js (data visualization)  
-- jsPDF / React-PDF (report generation)  
+Create the following files before running anything:
 
-### Backend
-- Python 3.12  
-- FastAPI (REST API)  
-- LangGraph / Async Agents (Research, Clinical, Patent, Regulatory, Market)  
-- Hybrid Database:  
-  - **Weaviate** (vector embeddings for semantic search)  
-  - **MySQL** (structured results, scoring, and report storage)  
+**backend/.env**
 
-### APIs & Data Sources
-- PubMed, ClinicalTrials.gov, Google Patents  
-- FDA / Regulatory CSVs  
-- Market datasets  
-
----
-
-## Architecture Overview
 ```
-┌───────────────────────────────────────────────────────────────┐
-│                          FRONTEND UI                          │
-│  React + Chakra UI + Zustand                                   │
-│  - Input Form (Drug / Disease / Both / None)                  │
-│  - Case Detection Logic (1–4)                                  │
-│  - Trend Mode Button                                           │
-│  - Results Panel / PDF Export (with source URLs)              │
-│  - Trend Dashboard (Charts, Heatmaps, Co-mentions)           │
-└─────────────────────────────┬─────────────────────────────────┘
-                              │
-                              ▼
-┌───────────────────────────────────────────────────────────────┐
-│                      CASE DETECTION LOGIC                     │
-│  Determines Mode: Case 1–4                                      │
-│  Routes request to appropriate agent pipeline                  │
-└───────────────┬───────────────────┬───────────────────────────┘
-                │                   │
-                ▼                   ▼
-┌───────────────────────────────┐     ┌───────────────────────────┐
-│     Multi-Agent Pipeline       │     │       Trend Analytics      │
-│  (Cases 1,2,3)                 │     │  (Case 4, broad insights) │
-│  LangGraph orchestrates agents  │     │  Real-time dashboards     │
-└─────┬──────────────┬─────────┘     └─────────────┬─────────────┘
-      │              │                                │
-      ▼              ▼                                ▼
-┌─────────────┐┌─────────────┐┌─────────────┐┌─────────────┐
-│ Research    ││ Clinical     ││ Patent      ││ Market      │
-│ Agent       ││ Trials Agent ││ Agent       ││ Agent       │
-│ PubMed,     ││ ClinicalTrials.gov │ Google Patents │ Pricing/Trends CSV │
-│ ArXiv       ││ Phases, Status    │ IP Conflicts  │ Market Data        │
-└─────────────┘└─────────────┘└─────────────┘└─────────────┘
-      │              │              │               │
-      └──────────────┬──────────────┘
-                     ▼
-┌───────────────────────────────────────────────────────────────┐
-│                 AGENT OUTPUT POOL (JSON)                     │
-│  Normalized schema: { evidence, source_url, score, trial_count, date, agent } │
-└───────────────┬───────────────────────────────────────────────┘
-                │
-                ▼
-┌───────────────────────────────────────────────────────────────┐
-│                    SEMANTIC SEARCH & VECTOR DB                │
-│  - Weaviate embeddings for fast retrieval                     │
-│  - Top-K + similarity thresholds                               │
-│  - Clustering & trend detection                                │
-│  - Incremental merge of new API results                        │
-└───────────────┬───────────────────────────────────────────────┘
-                │
-                ▼
-┌───────────────────────────────────────────────────────────────┐
-│                      STRUCTURED DB (SQL)                      │
-│  - PostgreSQL stores scores, report metadata, last fetch dates│
-│  - Ensures deduplication and efficient queries                │
-└───────────────┬───────────────────────────────────────────────┘
-                │
-                ▼
-┌───────────────────────────────────────────────────────────────┐
-│                      SCORING ENGINE                             │
-│  Weighted multi-factor score:                                   │
-│  Science / Clinical / Patent / Regulatory / Market             │
-│  → Repurposeability Score (0–100)                               │
-└───────────────┬───────────────────────────────────────────────┘
-                │
-                ▼
-┌───────────────────────────────────────────────────────────────┐
-│            DECISION & RECOMMENDATION LAYER                     │
-│  - Go / No-Go Verdict                                           │
-│  - Top Alternatives / Substitutes                               │
-│  - Confidence Summary                                           │
-└───────────────┬───────────────────────────────────────────────┘
-                │
-                ▼
-┌───────────────────────────────────────────────────────────────┐
-│                      PDF / REPORT GENERATOR                   │
-│  - Downloadable Reports                                         │
-│  - Score breakdown, citations, top recommendations             │
-│  - Trend Graphs (if Case 4)                                     │
-└───────────────┬───────────────────────────────────────────────┘
-                │
-                ▼
-┌───────────────────────────────────────────────────────────────┐
-│                   SELF-GROWING KNOWLEDGE LOOP                 │
-│  - New evidence → Vector DB & SQL DB → LangGraph → Agents     │
-│  - Trends & clusters updated automatically                     │
-│  - Each query improves semantic retrieval and scoring          │
-│  - Continuous learning without manual intervention             │
-└───────────────────────────────────────────────────────────────┘
+GROQ_API_KEY=your_groq_key
+ALLOWED_ORIGINS=http://localhost:5173
+```
 
+**frontend/.env.local**
+
+```
+VITE_API_BASE_URL=http://localhost:8000
+```
+
+`ALLOWED_ORIGINS=*` is supported but restrict it to trusted origins in production.
+
+---
+
+## Backend Setup (FastAPI)
+
+```powershell
+cd backend
+python -m venv .venv
+.\.venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
+```
+
+The server exposes `POST /repurpose`. Example payload:
+
+```http
+POST /repurpose HTTP/1.1
+Content-Type: application/json
+
+{
+   "molecule": "Semaglutide",
+   "disease": "NASH",
+   "trend_mode": false
+}
+```
+
+Successful responses include `analysis.agents` (research, clinical_trials, patents, market), `analysis.scoring_engine`, and `analysis.final_verdict`. Errors return a FastAPI JSON problem response with `detail`.
+
+---
+
+## Frontend Setup (React + Vite)
+
+```powershell
+cd frontend
+npm install
+npm run dev -- --host 0.0.0.0 --port 5173
+```
+
+The UI uses Zustand for state. When a user runs Case 1 or Case 3, `useResultStore.runAnalysis` posts to `/repurpose`, persists the latest query, and hydrates every detail page (Evidence, Trials, Patents, Market) along with export utilities.
+
+---
+
+## Development Workflow
+
+1. Start the backend (see above) and ensure the terminal prints `Uvicorn running on http://127.0.0.1:8000`.
+2. Start the frontend dev server and open http://localhost:5173.
+3. Choose Case 1 or Case 3, enter a molecule (and optional disease), and click **Run Analysis**.
+4. Explore the Results panel, drill into the detail pages, or download the TXT source summary.
+
+If the backend is unreachable you’ll see a toast error and an inline alert inside the Results panel.
+
+---
+
+## Project Structure
+
+```
+backend/
+   app/
+      routes/repurpose_route.py   # POST /repurpose endpoint
+      core/llm_provider.py        # ChatGroq client helper
+      core/decision_layer.py      # Verdict generator
+      ...
+frontend/
+   src/
+      states/useResultStore.js    # API client + Zustand store
+      Components/                 # Cards, charts, export widgets
+      pages/                      # Evidence/Trials/Patents/Market detail screens
 ```
 
 ---
 
-## Advantages
+## Tips & Next Steps
 
-1. **Multi-Mode Discovery** → Serves chemists, clinicians, analysts, and management.  
-2. **Fast & Lightweight** → Vector DB + async agents ensures low latency and rapid responses.  
-3. **Always Updated** → Incremental API fetch ensures the latest evidence is included.  
-4. **Self-Growing Knowledge** → Vector DB + LangGraph expand automatically as new evidence is ingested.  
-5. **Traceable & Credible** → All reports include URLs, sources, and agent information.  
-6. **Semantic Search + Clustering** → Improves relevance, trend detection, and pattern recognition.  
-7. **Modular & Extensible** → Easy to add new agents, sources, or scoring criteria.  
-8. **Reduced Redundancy** → Deduplication ensures only **unique evidence contributes**, keeping the system efficient.
+- Case 2 and Case 4 buttons remain visible but intentionally show “Live data soon” messaging until their agent pipelines are implemented.
+- `PDFExportPanel` currently downloads a TXT-based source list; switch the FastAPI export hook on once PDF generation is deployed.
+- When deploying, update `ALLOWED_ORIGINS` and `VITE_API_BASE_URL` to the hosted URLs and supply a production-ready GROQ key via your secret manager.
 
----
-
-## Summary
-
-PharmAI Insights combines **fast semantic search**, **multi-agent orchestration**, and **incremental evidence ingestion** to provide:
-
-- Accurate, traceable drug repurposing recommendations  
-- Trend analysis and emerging insight dashboards  
-- PDF reports with full citation and scoring details  
-- Lightweight, modular, and scalable architecture for easy extension  
+Happy researching! 🧪
 
 ---
 

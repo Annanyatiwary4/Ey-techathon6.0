@@ -1,6 +1,7 @@
 import React from 'react'
 import InputForm from './InputForm'
 import ResultsPanel from './ResultsPanel'
+import AlertBanner from './AlertBanner'
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card'
 
 export default function HomeInput() {
@@ -25,6 +26,7 @@ export default function HomeInput() {
               <div className="text-sm font-semibold text-gray-700">Search Parameters</div>
               <div className="h-px bg-gray-300 my-3" />
             </div>
+            <AlertBanner />
             <InputForm />
           </CardContent>
         </Card>

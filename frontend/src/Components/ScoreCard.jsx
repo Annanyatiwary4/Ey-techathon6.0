@@ -3,20 +3,24 @@ import { Card, CardHeader, CardTitle, CardContent } from './ui/card'
 import { Progress } from './ui/progress'
 import { CheckCircle2 } from 'lucide-react'
 
-export default function ScoreCard({ score = 72 }) {
-  const getRecommendation = (score) => {
-    if (score >= 80) return { text: 'HIGH POTENTIAL', color: 'text-green-600', bg: 'bg-green-50' }
-    if (score >= 60) return { text: 'MODERATE POTENTIAL', color: 'text-yellow-600', bg: 'bg-yellow-50' }
+export default function ScoreCard({ scoring }) {
+  const score = Math.round(scoring?.final_repurposeability_score ?? 0)
+  const breakdown = scoring?.score_breakdown ?? {}
+
+  const getRecommendation = (value) => {
+    if (value >= 80) return { text: 'HIGH POTENTIAL', color: 'text-green-600', bg: 'bg-green-50' }
+    if (value >= 60) return { text: 'MODERATE POTENTIAL', color: 'text-yellow-600', bg: 'bg-yellow-50' }
     return { text: 'LOW POTENTIAL', color: 'text-red-600', bg: 'bg-red-50' }
   }
 
   const recommendation = getRecommendation(score)
 
   const factors = [
-    { label: 'Scientific evidence', checked: score > 60 },
-    { label: 'Clinical trials', checked: score > 55 },
-    { label: 'Patent risk', checked: score > 50 },
-    { label: 'Market viability', checked: score > 65 }
+    { label: 'Scientific evidence', value: breakdown.science ?? 0 },
+    { label: 'Clinical trials', value: breakdown.clinical ?? 0 },
+    { label: 'Patent outlook', value: breakdown.patent ?? 0 },
+    { label: 'Regulatory readiness', value: breakdown.regulatory ?? 0 },
+    { label: 'Market feasibility', value: breakdown.market ?? 0 }
   ]
 
   return (
@@ -40,18 +44,24 @@ export default function ScoreCard({ score = 72 }) {
         </div>
 
         <div className="space-y-2">
-          <div className="text-sm font-semibold text-gray-700">Factors considered:</div>
+          <div className="text-sm font-semibold text-gray-700">Score breakdown</div>
           {factors.map((f, i) => (
-            <div key={i} className="flex items-center gap-2 text-sm">
-              <CheckCircle2 
-                size={16} 
-                className={f.checked ? 'text-green-600' : 'text-gray-300'} 
-              />
-              <span className={f.checked ? 'text-gray-700' : 'text-gray-400'}>
-                {f.label}
-              </span>
+            <div key={i} className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2">
+                <CheckCircle2
+                  size={16}
+                  className={f.value >= 50 ? 'text-green-600' : 'text-gray-300'}
+                />
+                <span className={f.value >= 50 ? 'text-gray-700' : 'text-gray-400'}>
+                  {f.label}
+                </span>
+              </div>
+              <span className="font-semibold text-gray-800">{Math.round(f.value)}</span>
             </div>
           ))}
+          <p className="text-xs text-gray-500 mt-3">
+            {scoring?.explanation || 'Weighted multi-agent scoring'}
+          </p>
         </div>
       </CardContent>
     </Card>
