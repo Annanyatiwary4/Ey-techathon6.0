@@ -7,7 +7,7 @@ export default function AlertBanner() {
       <Info className="h-4 w-4 text-blue-600" />
       <AlertTitle className="text-blue-900">Live data is enabled</AlertTitle>
       <AlertDescription className="text-blue-700">
-        Case 1 and Case 3 are wired to the FastAPI backend. Case 2 and Case 4 will unlock once their agents are ready.
+        Case 1 and Case 3 are enabled. Case 2 and Case 4 will unlock once their agents are ready.
       </AlertDescription>
     </Alert>
   )

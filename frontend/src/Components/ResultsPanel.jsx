@@ -66,6 +66,16 @@ export default function ResultsPanel() {
     market?.summary && `Market trends: ${market.summary}`
   ].filter(Boolean)
 
+  const secondaryOps = Array.isArray(finalVerdict?.secondary_opportunities)
+    ? finalVerdict.secondary_opportunities
+    : finalVerdict?.secondary_opportunity
+    ? [finalVerdict.secondary_opportunity]
+    : []
+
+  const whyItWorksList = Array.isArray(finalVerdict?.why_it_works) && finalVerdict.why_it_works.length > 0
+    ? finalVerdict.why_it_works
+    : synthesisPieces
+
   return (
     <div className="mt-8 space-y-6">
       <div className="text-center">
@@ -95,28 +105,40 @@ export default function ResultsPanel() {
               <span className="text-sm font-bold text-indigo-600">{finalVerdict?.decision || 'N/A'}</span>
             </div>
             <p className="text-xs text-gray-500 mb-3">Confidence: {finalVerdict?.confidence || 'Unknown'}</p>
+            {finalVerdict?.executive_summary && (
+              <p className="text-sm text-gray-700 mb-3">{finalVerdict.executive_summary}</p>
+            )}
             {finalVerdict?.primary_opportunity && (
               <p className="text-sm text-gray-700 mb-2">
                 Primary opportunity: <span className="font-semibold">{finalVerdict.primary_opportunity}</span>
               </p>
             )}
-            {finalVerdict?.secondary_opportunity && (
-              <p className="text-sm text-gray-700 mb-2">
-                Secondary opportunity: <span className="font-semibold">{finalVerdict.secondary_opportunity}</span>
-              </p>
+            {secondaryOps.length > 0 && (
+              <div className="text-sm text-gray-700 mb-2">
+                <p className="font-semibold text-gray-800">Secondary opportunities</p>
+                <p className="text-xs text-gray-600">{secondaryOps.join(' • ')}</p>
+              </div>
             )}
-            <div className="text-sm text-gray-700 mb-3">
-              <p className="font-semibold text-gray-800 mb-1">Suggested path forward</p>
-              {synthesisPieces.length > 0 ? (
+            {whyItWorksList.length > 0 && (
+              <div className="text-sm text-gray-700 mb-3">
+                <p className="font-semibold text-gray-800 mb-1">Why it works</p>
                 <ul className="list-disc list-inside text-xs text-gray-600 space-y-1">
-                  {synthesisPieces.map((line, idx) => (
-                    <li key={`synthesis-${idx}`}>{line}</li>
+                  {whyItWorksList.map((line, idx) => (
+                    <li key={`why-${idx}`}>{line}</li>
                   ))}
                 </ul>
-              ) : (
-                <p className="text-xs text-gray-500">Run an analysis to aggregate signals from trials, patents, and market trends.</p>
-              )}
-            </div>
+              </div>
+            )}
+            {Array.isArray(finalVerdict?.risk_summary) && finalVerdict.risk_summary.length > 0 && (
+              <div className="text-sm text-gray-700 mb-3">
+                <p className="font-semibold text-gray-800 mb-1">Risks to monitor</p>
+                <ul className="list-disc list-inside text-xs text-gray-600 space-y-1">
+                  {finalVerdict.risk_summary.map((risk, idx) => (
+                    <li key={`risk-${idx}`}>{risk}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
             {Array.isArray(finalVerdict?.recommended_next_steps) && finalVerdict.recommended_next_steps.length > 0 && (
               <div className="text-sm text-gray-700">
                 <p className="font-medium mb-1">Next steps:</p>

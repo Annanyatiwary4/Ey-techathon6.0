@@ -95,7 +95,8 @@ def build_case1_graph():
             **s,
             "final_verdict": generate_final_verdict(
                 s["scoring_engine"],
-                extract_diseases(s["research"])
+                extract_diseases(s["research"]),
+                s.get("molecule")
             )
         }
     )

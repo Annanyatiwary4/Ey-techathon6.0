@@ -2,7 +2,7 @@ import React from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card'
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, ExternalLink } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 export default function EvidenceCard({ research }) {
@@ -11,6 +11,14 @@ export default function EvidenceCard({ research }) {
   const negatives = research?.negative_evidence ?? []
   const preview = positives.slice(0, 3)
   const totalArticles = research?.metrics?.total_papers ?? positives.length + negatives.length
+
+  const getEvidenceUrl = (item) => {
+    if (item?.url) return item.url
+    if (item?.title) {
+      return `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(item.title)}`
+    }
+    return null
+  }
 
   return (
     <Card className="hover:shadow-lg transition-shadow">
@@ -36,7 +44,7 @@ export default function EvidenceCard({ research }) {
           <div className="space-y-2">
             <div className="text-sm font-medium text-gray-700">Key Findings (Preview):</div>
             {preview.map((item, index) => (
-              <div key={index} className="border rounded-md p-3 bg-white">
+              <div key={index} className="border rounded-md p-3 bg-white space-y-2">
                 <div className="flex items-center justify-between">
                   <Badge variant="secondary" className="text-xs">
                     {item.disease || 'Indication'}
@@ -45,8 +53,16 @@ export default function EvidenceCard({ research }) {
                     <span className="text-xs text-gray-500">{item.year}</span>
                   )}
                 </div>
-                <div className="font-semibold text-sm mt-2">{item.title}</div>
-                <p className="text-xs text-gray-500 mt-1">{item.journal}</p>
+                <div className="font-semibold text-sm">{item.title}</div>
+                <p className="text-xs text-gray-500">{item.journal}</p>
+                {getEvidenceUrl(item) && (
+                  <Button variant="link" size="sm" className="px-0" asChild>
+                    <a href={getEvidenceUrl(item)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-purple-700">
+                      <ExternalLink size={14} className="mr-1" />
+                      View PubMed record
+                    </a>
+                  </Button>
+                )}
               </div>
             ))}
           </div>

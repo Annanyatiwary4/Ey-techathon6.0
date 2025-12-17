@@ -76,11 +76,20 @@ export default function PDFExportPanel() {
       if (verdict) {
         addHeading('Final Verdict', 16)
         addParagraph(`Decision: ${verdict.decision || 'N/A'} (confidence: ${verdict.confidence || 'Unknown'})`)
+        if (verdict.executive_summary) {
+          addParagraph(verdict.executive_summary)
+        }
         if (verdict.primary_opportunity) {
           addParagraph(`Primary opportunity: ${verdict.primary_opportunity}`)
         }
-        if (verdict.secondary_opportunity) {
-          addParagraph(`Secondary opportunity: ${verdict.secondary_opportunity}`)
+        if (Array.isArray(verdict.secondary_opportunities) && verdict.secondary_opportunities.length) {
+          addParagraph(`Secondary opportunities: ${verdict.secondary_opportunities.join(', ')}`)
+        }
+        if (Array.isArray(verdict.why_it_works) && verdict.why_it_works.length) {
+          addParagraph(`Why it works: ${verdict.why_it_works.join(' | ')}`)
+        }
+        if (Array.isArray(verdict.risk_summary) && verdict.risk_summary.length) {
+          addParagraph(`Risks: ${verdict.risk_summary.join(' | ')}`)
         }
         if (Array.isArray(verdict.recommended_next_steps) && verdict.recommended_next_steps.length) {
           addParagraph(`Next steps: ${verdict.recommended_next_steps.join(' | ')}`)

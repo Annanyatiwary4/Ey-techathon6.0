@@ -15,11 +15,15 @@ export default function PatentsDetailPage() {
   const active = patents?.active_patents || []
   const expired = patents?.expired_patents || []
   const conflicts = patents?.ip_conflicts || []
+  const detailedEntries = patents?.detailed_entries || []
+  const sources = patents?.sources || []
+  const successStory = patents?.success_story
 
   const handleExport = () => {
     if (!patents) return
 
-    const content = `PATENT LANDSCAPE SUMMARY\nDrug: ${drug || 'N/A'}\nDisease: ${disease || 'N/A'}\nRisk Level: ${metrics.ip_risk_level || 'Unknown'}\n\nSUMMARY\n${patents.summary || 'No insight'}\n\nACTIVE PATENTS\n${active.join('\n') || 'None'}\n\nEXPIRED / CLASS NOTES\n${expired.join('\n') || 'None'}\n\nCONFLICTS\n${conflicts.map((c) => `${c.issue} - ${c.competitor} (${c.url || 'N/A'})`).join('\n') || 'None'}\n`
+    const entryLines = detailedEntries.map((entry) => `${entry.number} — ${entry.title} (${entry.date || 'n.d.'}) ${entry.url || ''}`)
+    const content = `PATENT LANDSCAPE SUMMARY\nDrug: ${drug || 'N/A'}\nDisease: ${disease || 'N/A'}\nRisk Level: ${metrics.ip_risk_level || 'Unknown'}\n\nSUCCESS STORY\n${successStory || 'N/A'}\n\nSUMMARY\n${patents.summary || 'No insight'}\n\nACTIVE PATENTS\n${active.join('\n') || 'None'}\n\nEXPIRED / CLASS NOTES\n${expired.join('\n') || 'None'}\n\nDETAILED ENTRIES\n${entryLines.join('\n') || 'No structured entries'}\n\nCONFLICTS\n${conflicts.map((c) => `${c.issue} - ${c.competitor} (${c.url || 'N/A'})`).join('\n') || 'None'}\n\nSOURCES\n${sources.join('\n') || 'N/A'}\n`
 
     const blob = new Blob([content], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
@@ -71,6 +75,15 @@ export default function PatentsDetailPage() {
           </CardContent>
         </Card>
 
+        {successStory && (
+          <Card className="border-blue-200 bg-blue-50">
+            <CardContent className="pt-6">
+              <h3 className="text-sm font-semibold text-blue-900 uppercase tracking-wide">Repurposing success</h3>
+              <p className="text-sm text-gray-700 mt-2">{successStory}</p>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <CardContent className="pt-6 text-center">
@@ -108,9 +121,37 @@ export default function PatentsDetailPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Detailed Entries</CardTitle>
+            <CardTitle>Patent Evidence Grid</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
+            <section>
+              <h4 className="text-sm font-semibold text-gray-700 mb-3">Key filings</h4>
+              {detailedEntries.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {detailedEntries.map((entry, idx) => (
+                    <div key={`entry-${idx}`} className="p-4 border rounded-lg bg-white shadow-sm">
+                      <div className="text-sm font-semibold text-gray-900">{entry.title}</div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {entry.number} • {entry.date || 'n.d.'}
+                      </div>
+                      <div className="text-xs text-gray-500">{entry.assignee || 'Assignee not disclosed'}</div>
+                      <p className="text-sm text-gray-600 mt-2">{entry.focus}</p>
+                      {entry.url && (
+                        <Button variant="link" size="sm" className="px-0 mt-2" asChild>
+                          <a href={entry.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center">
+                            <ExternalLink size={14} className="mr-1" />
+                            Open patent
+                          </a>
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">No structured patent entries returned for this query.</p>
+              )}
+            </section>
+
             <section>
               <h4 className="text-sm font-semibold text-gray-700 mb-2">Active claims</h4>
               {active.length > 0 ? (
@@ -162,6 +203,21 @@ export default function PatentsDetailPage() {
             </section>
           </CardContent>
         </Card>
+
+        {sources.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Sources</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+                {sources.map((item, idx) => (
+                  <li key={`patent-source-${idx}`}>{item}</li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   )

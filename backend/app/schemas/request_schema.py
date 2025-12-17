@@ -1,5 +1,6 @@
-from pydantic import BaseModel, Field
 from typing import Optional
+
+from pydantic import AliasChoices, BaseModel, Field
 
 
 class RepurposeRequest(BaseModel):
@@ -7,6 +8,7 @@ class RepurposeRequest(BaseModel):
 		default=None,
 		min_length=1,
 		description="Primary molecule or drug name",
+		validation_alias=AliasChoices("molecule", "drug"),
 	)
 	disease: Optional[str] = Field(
 		default=None,

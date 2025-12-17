@@ -1,5 +1,6 @@
 from datetime import datetime
-from fastapi import APIRouter, HTTPException, status
+
+from fastapi import APIRouter, HTTPException, Query, status
 
 from app.core.decision_layer import detect_case
 from app.graph.langgraph_builder import build_case1_graph
@@ -13,18 +14,7 @@ UNSUPPORTED_CASE_MESSAGES = {
 }
 
 
-@router.post("/repurpose")
-def repurpose(payload: RepurposeRequest):
-    payload_dict = payload.model_dump()
-
-    try:
-        case_type = detect_case(payload_dict)
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=str(exc)
-        ) from exc
-
+def _process_repurpose_request(payload: RepurposeRequest):
     molecule = (payload.molecule or "").strip()
     disease = (payload.disease or "").strip() or None
 
@@ -33,6 +23,20 @@ def repurpose(payload: RepurposeRequest):
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Please provide a molecule or drug name to run the analysis."
         )
+
+    case_probe = {
+        "molecule": molecule,
+        "disease": disease,
+        "trend_mode": payload.trend_mode
+    }
+
+    try:
+        case_type = detect_case(case_probe)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc)
+        ) from exc
 
     if case_type in UNSUPPORTED_CASE_MESSAGES:
         raise HTTPException(
@@ -43,7 +47,11 @@ def repurpose(payload: RepurposeRequest):
     graph = build_case1_graph()
 
     try:
-        state = graph.invoke({"molecule": molecule})
+        state = graph.invoke({
+            "molecule": molecule,
+            "disease": disease,
+            "trend_mode": payload.trend_mode
+        })
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -55,11 +63,7 @@ def repurpose(payload: RepurposeRequest):
     return {
         "query_metadata": {
             "case_type": case_type,
-            "input": {
-                "molecule": molecule,
-                "disease": disease,
-                "trend_mode": payload.trend_mode
-            },
+            "input": case_probe,
             "generated_at": timestamp
         },
         "agents": {
@@ -75,3 +79,19 @@ def repurpose(payload: RepurposeRequest):
             "pdf_url": None
         }
     }
+
+
+@router.post("/repurpose")
+def repurpose(payload: RepurposeRequest):
+    return _process_repurpose_request(payload)
+
+
+@router.get("/repurpose")
+def repurpose_get(
+    molecule: str | None = Query(default=None, description="Molecule or drug name"),
+    drug: str | None = Query(default=None, description="Alias for molecule or drug name"),
+    disease: str | None = Query(default=None, description="Optional disease context"),
+    trend_mode: bool = Query(default=False, description="Toggle trend intelligence mode")
+):
+    payload = RepurposeRequest(molecule=molecule or drug, disease=disease, trend_mode=trend_mode)
+    return _process_repurpose_request(payload)

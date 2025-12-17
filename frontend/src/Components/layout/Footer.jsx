@@ -44,7 +44,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t mt-8 pt-6 text-center text-sm text-gray-500">
-          <p>©2025 PharmAI | MIT License | Built with React + Vite + shadcn/ui</p>
+          <p>©2025 PharmAI </p>
         </div>
       </div>
     </footer>
